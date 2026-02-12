@@ -25,9 +25,9 @@ jobs:
         env:
           JF_URL: ${{ env.JF_URL }}
 
-      - name: Configure Docker for JFrog
+      - name: Docker login to JFrog
         run: |
-          jf docker-login ${{ env.DOCKER_REGISTRY }}
+          echo ${{ secrets.JF_ACCESS_TOKEN }} | docker login ${{ env.DOCKER_REGISTRY }} -u ${{ secrets.JF_USER }} --password-stdin
 
       - name: Set image tag
         id: tag
@@ -37,13 +37,11 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          jf docker build \
-            -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/billing-feature:${{ steps.tag.outputs.TAG }} \
-            -f Dockerfile .
+          docker build             -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/billing-feature:${{ steps.tag.outputs.TAG }}             -f Dockerfile .
 
       - name: Push Docker Image
         run: |
-          jf docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/billing-feature:${{ steps.tag.outputs.TAG }}
+          docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/billing-feature:${{ steps.tag.outputs.TAG }}
 
       - name: Publish Build Info
         run: |
