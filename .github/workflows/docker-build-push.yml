@@ -35,63 +35,16 @@ jobs:
           TAG="pr-${{ github.event.pull_request.number }}-${GITHUB_SHA::8}"
           echo "TAG=${TAG}" >> $GITHUB_OUTPUT
 
-      # ---- Backend ----
-      - name: Build Backend Image
-        working-directory: apps/api
+      - name: Build Docker Image
         run: |
           jf docker build \
-            --build-arg DIRECT_URL="" \
-            --build-arg DATABASE_URL="" \
-            --build-arg SENTRY_AUTH_TOKEN="" \
-            --build-arg NEW_RELIC_LICENSE_KEY="" \
-            --build-arg NEW_RELIC_APP_NAME="" \
-            -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/backend:${{ steps.tag.outputs.TAG }} \
-            -f Dockerfile.backend .
+            -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/billing-feature:${{ steps.tag.outputs.TAG }} \
+            -f Dockerfile .
 
-      - name: Push Backend Image
+      - name: Push Docker Image
         run: |
-          jf docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/backend:${{ steps.tag.outputs.TAG }}
+          jf docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/billing-feature:${{ steps.tag.outputs.TAG }}
 
-      # ---- Worker ----
-      - name: Build Worker Image
-        working-directory: apps/api
-        run: |
-          jf docker build \
-            --build-arg DIRECT_URL="" \
-            --build-arg DATABASE_URL="" \
-            --build-arg SENTRY_AUTH_TOKEN="" \
-            -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/worker:${{ steps.tag.outputs.TAG }} \
-            -f Dockerfile.worker .
-
-      - name: Push Worker Image
-        run: |
-          jf docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/worker:${{ steps.tag.outputs.TAG }}
-
-      # ---- Dev Server (multi-stage target: server) ----
-      - name: Build Dev Server Image
-        working-directory: apps/api
-        run: |
-          jf docker build \
-            -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/dev-server:${{ steps.tag.outputs.TAG }} \
-            -f Dockerfile.dev --target server .
-
-      - name: Push Dev Server Image
-        run: |
-          jf docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/dev-server:${{ steps.tag.outputs.TAG }}
-
-      # ---- Dev Worker (multi-stage target: worker) ----
-      - name: Build Dev Worker Image
-        working-directory: apps/api
-        run: |
-          jf docker build \
-            -t ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/dev-worker:${{ steps.tag.outputs.TAG }} \
-            -f Dockerfile.dev --target worker .
-
-      - name: Push Dev Worker Image
-        run: |
-          jf docker push ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}/dev-worker:${{ steps.tag.outputs.TAG }}
-
-      # ---- Publish Build Info ----
       - name: Publish Build Info
         run: |
           jf rt build-publish "${{ github.repository }}" "${{ steps.tag.outputs.TAG }}"
